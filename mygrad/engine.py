@@ -1,6 +1,6 @@
 """
     My recreation of Andrej Karpathy's micrograd Value
-    """
+"""
 from math import exp, log
 import math
 
