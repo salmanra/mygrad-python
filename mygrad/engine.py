@@ -3,95 +3,62 @@
 """
 from math import exp, log
 import math
+import numpy as np
 
 
-class Value:
-    """Baby blue"""
+class Tensor:
+    # once data and grad are set up as Tensors, is it all too easy from there?
+    # ie, does numpy make it all too easy from there?
+    # can we get to an MLP with no big conceptual leaps?
+    # what other architectures can we get to with no big conceptual leaps?
 
     def __init__(self, data, _children=(), _op="") -> None:
-        self.data = data
-        self.grad = 0.0
+        self.data = data # you'd better be a np.ndarray
+        self.grad = np.zeros_like(self.data)
         self._prev = set(_children)
         self._op = _op
         self._backward = lambda: None
 
     def __add__(self, other):
-        other = other if isinstance(other, Value) else Value(other)
-        t = self.data + other.data
-        out = Value(t, (self, other), "+")
-
+        out = Tensor(self.data + other.data, (self, other), "+")
         def _backward():
             self.grad += out.grad
             other.grad += out.grad
-
         out._backward = _backward
+
         return out
 
     def __mul__(self, other):
-        other = other if isinstance(other, Value) else Value(other)
-        t = self.data * other.data
-        out = Value(t, (self, other), "*")
-
+        out = Tensor(self.data.dot(other.data), (self, other), "*")
         def _backward():
             self.grad += other.data * out.grad
-            other.grad += other.grad * out.grad
-
+            other.grad += self.data * out.grad
         out._backward = _backward
+
         return out
 
     def exp(self):
-        t = exp(self.data)
-        out = Value(t, (self,), "exp")
-
+        # what's happening here?
+        # we take the exponent of each element of the Tensor,
+        # then we must backprop through each element of the Tensor
+        out = Tensor([exp(elt) for elt in self.data])
         def _backward():
-            self.grad += t * out.grad
-
+            self.grad += out.data * out.grad
         out._backward = _backward
+
         return out
 
     def log(self):
-        t = log(self.data)
-        out = Value(t, (self,), "log")
-
-        def _backward():
-            self.grad += (1.0 / self.data) * out.grad
-
-        out._backward = _backward
-        return out
+        return self
 
     def __pow__(self, other):
-        other = other if isinstance(other, Value) else Value(other)
-        t = self.data**other.data
-        out = Value(t, (self, other), "pow")
-
-        def _backward():
-            self.grad += other.data * (self.data ** (other.data - 1)) * out.grad
-            other.grad += (
-                math.copysign(log(math.fabs(self.data)), self.data) * t * out.grad
-            )
-
-        out._backward = _backward
-        return out
+        return self
 
     def tanh(self):
-        t = (exp(2 * self.data) + 1) / (exp(2 * self.data) - 1)
-        out = Value(t, (self,), "tanh")
-
-        def _backward():
-            self.grad += (1 - t**2) * out.grad
-
-        out._backward = _backward
-        return out
+        return self
 
     def relu(self):
-        t = self.data if self.data > 0 else 0.0
-        out = Value(t, (self,), "ReLU")
-
-        def _backward():
-            self.grad += (out.data > 0) * out.grad
-
-        out._backward = _backward
-        return out
+        return self
 
     def backward(self):
         # topological sort
