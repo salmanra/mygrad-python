@@ -1,39 +1,22 @@
 from random import uniform
-from mygrad.nn import MLP
+from mygrad.engine import Tensor
+import numpy as np
 
+# a = Tensor([1.0, 2.0, 3.0])
+# b = Tensor([9, 8, 7])
 
-def MSELoss(ys, os):
-    return sum((y - out) ** 2 for (y, out) in zip(ys, os))
+# print(a + b)
+# print(a*b)
 
+u = Tensor([[1, 2], [3, 4]])
+v = Tensor([[5, 6], [7, 8]])
 
-def train(net, lossfunc, lrate, indata, truth, epochs, batchsize):
-    # batch size is here so we do SGD and not merely GD
+print(u+v)
+print(u*v)
 
-    for _ in range(epochs):
-        outs = net(indata)
-        loss = lossfunc(truth, outs)
+w = Tensor([1, 1])
+x = u*w
+x.backward()
+print(u)
 
-        net.zero_grad()
-
-        loss.backward()
-        for p in net.parameters():
-            p.data -= lrate * p.grad
-
-
-def eval(net, lossfunc, indata, truth):
-    return lossfunc(truth, net(indata))
-
-
-nin = 10
-nouts = [1, nin]
-xs = [uniform(-1, 1) for _ in range(nin)]
-mlp = MLP(nin, nouts)
-lr = 0.1
-
-ys = [1.0, -1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0]
-
-train(mlp, MSELoss, lr, xs, ys, 100)
-loss = eval(mlp, MSELoss, xs, ys)
-
-print(f"loss: {loss}, final outs: {mlp(xs)}")
-# print(f"all params: {mlp.parameters()}")
+# how do we get all the way to MLP?

@@ -12,15 +12,15 @@ class Tensor:
     # can we get to an MLP with no big conceptual leaps?
     # what other architectures can we get to with no big conceptual leaps?
 
-    def __init__(self, data, _children=(), _op="") -> None:
-        self.data = data # you'd better be a np.ndarray
+    def __init__(self, data, dtype=float, _children=(), _op="") -> None:
+        self.data = np.array(data, dtype=dtype) # you'd better be a np.ndarray
         self.grad = np.zeros_like(self.data)
         self._prev = set(_children)
         self._op = _op
         self._backward = lambda: None
 
     def __add__(self, other):
-        out = Tensor(self.data + other.data, (self, other), "+")
+        out = Tensor(self.data + other.data, float, (self, other), "+")
         def _backward():
             self.grad += out.grad
             other.grad += out.grad
@@ -29,7 +29,7 @@ class Tensor:
         return out
 
     def __mul__(self, other):
-        out = Tensor(self.data.dot(other.data), (self, other), "*")
+        out = Tensor(self.data.dot(other.data), float, (self, other), "*")
         def _backward():
             self.grad += other.data * out.grad
             other.grad += self.data * out.grad
@@ -99,4 +99,4 @@ class Tensor:
         return self + other
 
     def __repr__(self):
-        return f"Value(data={self.data}, grad={self.grad})"
+        return f"Tensor(data={self.data}, grad={self.grad})"
