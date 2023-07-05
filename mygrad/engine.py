@@ -33,7 +33,7 @@ class Tensor:
         def _backward():
             # TODO: verify this backward pass
             self.grad += other.data * out.grad
-            other.grad += self.data * out.grad
+            other.grad += out.grad * self.data 
         out._backward = _backward
 
         return out
@@ -42,11 +42,21 @@ class Tensor:
         out = Tensor(self.data.__matmul__(other.data), float, (self, other), '@')
         def _backward():
             # TODO: fix this ish
-            self.grad += out.grad 
-            other.grad += out.grad
+            self.grad += other.data @ out.grad 
+            other.grad += out.grad @ self.data
         out._backward = _backward
         return out
+    
+    def sum(self, axis=None):
+        # need this to construct a loss fxn that yields a scalar
+        out = Tensor(self.data.sum(axis=axis), float, (self,), 'sum')
+        def _backward():
+            # want self.grad to grow to size of self
+            self.grad += out.grad @ np.ones_like(self.data)
 
+        out._backward = _backward
+        return out
+    
     def exp(self):
         # what's happening here?
         # we take the exponent of each element of the Tensor,
@@ -86,7 +96,7 @@ class Tensor:
                 topo.append(v)
 
         build_topo(self)
-        self.grad = 1.0
+        self.grad = np.array([1.0])
         for node in reversed(topo):
             node._backward()
 
