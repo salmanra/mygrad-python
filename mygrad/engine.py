@@ -29,12 +29,22 @@ class Tensor:
         return out
 
     def __mul__(self, other):
-        out = Tensor(self.data.dot(other.data), float, (self, other), "*")
+        out = Tensor(self.data.__mul__(other.data), float, (self, other), "*")
         def _backward():
+            # TODO: verify this backward pass
             self.grad += other.data * out.grad
             other.grad += self.data * out.grad
         out._backward = _backward
 
+        return out
+    
+    def __matmul__(self, other):
+        out = Tensor(self.data.__matmul__(other.data), float, (self, other), '@')
+        def _backward():
+            # TODO: fix this ish
+            self.grad += out.grad 
+            other.grad += out.grad
+        out._backward = _backward
         return out
 
     def exp(self):
