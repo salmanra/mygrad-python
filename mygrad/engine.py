@@ -42,17 +42,30 @@ class Tensor:
         out = Tensor(self.data.__matmul__(other.data), float, (self, other), '@')
         def _backward():
             # TODO: fix this ish
-            self.grad += other.data @ out.grad 
-            other.grad += out.grad @ self.data
+            # for now, break it down by tensor shape:
+            #   1-D @ 1-D
+            #   2-D @ 1-D
+            #   2-D @ 2-D
+            # if I am not mistaken, all matmuls are broadcast operations of these three 
+            # basic matmuls. does numpy do kroenecker prod? pytorch?
+            # is there a different operator for batch matmul?
+
+            # we can determine the basic shape of the input tensors by the shape of the output tensors
+            #   scalar 1d-1d
+            #   vector 2d-1d
+            #   matrix 2d-2d
+            self.grad += out.grad @ np.transpose(other.data)
+            other.grad += self.data @ out.grad
         out._backward = _backward
         return out
     
     def sum(self, axis=None):
         # need this to construct a loss fxn that yields a scalar
+        # TODO: extend this to self of order greater than one
         out = Tensor(self.data.sum(axis=axis), float, (self,), 'sum')
         def _backward():
             # want self.grad to grow to size of self
-            self.grad += out.grad @ np.ones_like(self.data)
+            self.grad += out.grad * np.ones_like(self.data)
 
         out._backward = _backward
         return out
