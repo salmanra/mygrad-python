@@ -40,6 +40,8 @@ class Tensor:
     
     def __matmul__(self, other):
         out = Tensor(self.data.__matmul__(other.data), float, (self, other), '@')
+        def isVector(tensor):
+            return len(tensor.shape) == 1 or tensor.shape.count(1) == (len(tensor.shape) - 1)
         def _backward():
             # TODO: fix this ish
             # for now, break it down by tensor shape:
@@ -54,8 +56,11 @@ class Tensor:
             #   scalar 1d-1d
             #   vector 2d-1d
             #   matrix 2d-2d
-            self.grad += out.grad @ np.transpose(other.data)
-            other.grad += self.data @ out.grad
+            if isVector(other.data):
+                self.grad += np.outer(out.grad, other.data)
+            else:
+                self.grad += out.grad @ np.transpose(other.data) 
+            other.grad += out.grad @ self.data
         out._backward = _backward
         return out
     
@@ -66,6 +71,7 @@ class Tensor:
         def _backward():
             # want self.grad to grow to size of self
             self.grad += out.grad * np.ones_like(self.data)
+            x = 23
 
         out._backward = _backward
         return out
