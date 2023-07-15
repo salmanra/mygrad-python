@@ -35,7 +35,7 @@ class Tensor:
         out = Tensor(self.data.__mul__(other.data), float, (self, other), "*")
         def _backward():
             # TODO: verify this backward pass.
-            # it is definitely wrond, as mat-vec elt-wise mul backward pass does not work
+            # it is definitely wrong, as mat-vec elt-wise mul backward pass does not work
             #   something about broadcasting!
             self.grad += other.data * out.grad
             other.grad += self.data * out.grad 
@@ -53,7 +53,6 @@ class Tensor:
         def isVector(tensor):
             return tensor.shape.count(1) == (len(tensor.shape) - 1)
         def _backward():
-            # TODO: fix this ish
             # for now, break it down by tensor shape:
             #   1-D @ 1-D
             #   2-D @ 1-D
@@ -74,6 +73,8 @@ class Tensor:
                 self.grad += np.outer(out.grad, other.data).squeeze()
             else:
                 self.grad += np.dot(out.grad, np.transpose(other.data)) 
+
+            # since the grad of the B (in AB = C) is never an outer product, np.dot handles it nicely
             other.grad += np.dot(self.data.T, out.grad)
         out._backward = _backward
         return out
@@ -100,6 +101,7 @@ class Tensor:
 
         return out
 
+    # TODO: implement these buggers
     def log(self):
         return self
 

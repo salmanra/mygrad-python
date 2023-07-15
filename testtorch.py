@@ -2,6 +2,7 @@ import torch
 from mygrad.engine import Tensor
 
 
+# this one's for __matmul__ and sum
 def comparemygrad(array1, array2):
     ''' 
     a comparison between pytorch's treatment of matmul between two matrices and mygrad
@@ -39,12 +40,17 @@ def comparemygrad(array1, array2):
     # print(f'mloss.data: {mloss.data}')
 
 
-### ALIGNED PARADIGMS:
+
+### ALIGNED PARADIGMS: aka, we beasted
 # square matmul
 # comparemygrad([[1.0, 2.0], [3.0, 4.0]], [[1.0, 2.0], [3.0, 4.0]])
+#
+# non-square matmul
+# comparemygrad([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
 # 
 # mat-vec mul
 # comparemygrad([[1.0, 2.0], [3.0, 4.0]], [1.0, 2.0])
+# comparemygrad([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], [1.0, 2.0, 3.0])
 # 
 # dot product
 # comparemygrad([1.0, 2.0], [3.0, 4.0])
