@@ -13,7 +13,7 @@ class Tensor:
     # what other architectures can we get to with no big conceptual leaps?
 
     def __init__(self, data, dtype=float, _children=(), _op="") -> None:
-        self.data = np.array(data, dtype=dtype) # you'd better be a np.ndarray
+        self.data = np.array(data, dtype=dtype).squeeze() # you can be zero-dim. I will allow it. in fact, I will squeeze you
         self.grad = np.zeros_like(self.data)
         self._prev = set(_children)
         self._op = _op
@@ -44,6 +44,11 @@ class Tensor:
         return out
     
     def __matmul__(self, other):
+        '''
+        @ operator
+        This is the only (?) place where two scalars of dim one form a scalar of dim zero.
+        The most natural solution is to choke off the zero-dimness at init.
+        '''
         out = Tensor(self.data.__matmul__(other.data), float, (self, other), '@')
         def isVector(tensor):
             return tensor.shape.count(1) == (len(tensor.shape) - 1)
@@ -66,10 +71,10 @@ class Tensor:
             # np.outer is specifically for two vectors, so we need to read the 
             # shape of each matrix 
             if isVector(other.data):
-                self.grad += np.outer(out.grad, other.data)
+                self.grad += np.outer(out.grad, other.data).squeeze()
             else:
-                self.grad += out.grad @ np.transpose(other.data) 
-            other.grad += out.grad @ self.data
+                self.grad += np.dot(out.grad, np.transpose(other.data)) 
+            other.grad += np.dot(self.data.T, out.grad)
         out._backward = _backward
         return out
     
@@ -80,7 +85,6 @@ class Tensor:
         def _backward():
             # want self.grad to grow to size of self
             self.grad += out.grad * np.ones_like(self.data)
-            x = 23
 
         out._backward = _backward
         return out
@@ -124,7 +128,7 @@ class Tensor:
                 topo.append(v)
 
         build_topo(self)
-        self.grad = np.array([1.0])
+        self.grad = np.array(1.0)
         for node in reversed(topo):
             node._backward()
 
@@ -147,4 +151,4 @@ class Tensor:
         return self + other
 
     def __repr__(self):
-        return f"Tensor(data={self.data}, grad={self.grad})"
+        return f"Tensor(data={self.data}, grad={self.grad}, shape={self.data.shape})"
