@@ -35,5 +35,6 @@ def comparemygrad(array1, array2):
     # print(f'mloss.data: {mloss.data}')
 
 
-comparemygrad([[1.0, 2.0], [3.0, 4.0]], [[1.0, 2.0], [3.0, 4.0]])
+# comparemygrad([[1.0, 2.0], [3.0, 4.0]], [[1.0, 2.0], [3.0, 4.0]])
 # comparemygrad([[1.0, 2.0], [3.0, 4.0]], [1.0, 2.0])
+comparemygrad([1.0, 2], [3.0, 4])

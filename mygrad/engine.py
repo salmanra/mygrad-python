@@ -29,11 +29,16 @@ class Tensor:
         return out
 
     def __mul__(self, other):
+        '''
+        multiply arguments element-wise
+        '''
         out = Tensor(self.data.__mul__(other.data), float, (self, other), "*")
         def _backward():
-            # TODO: verify this backward pass
+            # TODO: verify this backward pass.
+            # it is definitely wrond, as mat-vec elt-wise mul backward pass does not work
+            #   something about broadcasting!
             self.grad += other.data * out.grad
-            other.grad += out.grad * self.data 
+            other.grad += self.data * out.grad 
         out._backward = _backward
 
         return out
@@ -41,7 +46,7 @@ class Tensor:
     def __matmul__(self, other):
         out = Tensor(self.data.__matmul__(other.data), float, (self, other), '@')
         def isVector(tensor):
-            return len(tensor.shape) == 1 or tensor.shape.count(1) == (len(tensor.shape) - 1)
+            return tensor.shape.count(1) == (len(tensor.shape) - 1)
         def _backward():
             # TODO: fix this ish
             # for now, break it down by tensor shape:
@@ -56,6 +61,10 @@ class Tensor:
             #   scalar 1d-1d
             #   vector 2d-1d
             #   matrix 2d-2d
+
+            # the rule is always an "outer product" of out.grad and other.data
+            # np.outer is specifically for two vectors, so we need to read the 
+            # shape of each matrix 
             if isVector(other.data):
                 self.grad += np.outer(out.grad, other.data)
             else:
