@@ -1,6 +1,30 @@
 import torch
 from mygrad.engine import Tensor
 
+def compadd(arr1, arr2):
+    w = torch.tensor(arr1, requires_grad=True)
+    x = torch.tensor(arr2, requires_grad=True)
+    b = w+x # did we broadcast? did we drop it in dirt? no, grow up
+    b.retain_grad()
+    loss = b.sum() 
+    loss.backward()
+    print(f'w: {w.data}')
+    print(f'w.grad: {w.grad}')
+    print(f'x.grad: {x.grad}')
+    print(f'b: {b.data}')
+
+    # now, do we align?
+    mw = Tensor(arr1)
+    mx = Tensor(arr2)
+    mb = mw+mx
+    print(f'mb: {mb}')
+    # print(f'mx: {mx}')
+    # print(f'mw: {mw}')
+
+    mloss = mb.sum()
+    mloss.backward()
+    print(f'mw: {mw}')
+    print(f'mx: {mx}')
 
 # this one's for __matmul__ and sum
 def comparemygrad(array1, array2):
@@ -39,6 +63,9 @@ def comparemygrad(array1, array2):
     # print(f'mloss.grad: {mloss.grad}')
     # print(f'mloss.data: {mloss.data}')
 
+# compare addition
+# compadd([[1.0, 2.0], [3.0, 4.0]], [[1.0, 2.0], [3.0, 4.0]])
+compadd([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]], [1.0, 2.0])
 
 
 ### ALIGNED PARADIGMS: aka, we beasted

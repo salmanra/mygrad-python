@@ -20,6 +20,12 @@ class Tensor:
         self._backward = lambda: None
 
     def __add__(self, other):
+        # let's say out is constructed via broadcasting. 
+        # let's say self is the smaller of the two.
+        # there's no way to "unbroadcast" out.grad to self.data!
+        # yuck
+        # is this why we build a backwards graph? to store self somewhere as its big, broadcasted, backpropable self?
+        # is this why requires_grad=False exists? Not just performance, but literally being unable to backprop?
         out = Tensor(self.data + other.data, float, (self, other), "+")
         def _backward():
             self.grad += out.grad
