@@ -4,6 +4,7 @@
 from math import exp, log
 import math
 import numpy as np
+import itertools as itt
 
 
 class Tensor:
@@ -28,8 +29,25 @@ class Tensor:
         # is this why requires_grad=False exists? Not just performance, but literally being unable to backprop?
         out = Tensor(self.data + other.data, float, (self, other), "+")
         def _backward():
-            self.grad += out.grad
-            other.grad += out.grad
+            # if self.grad is smaller than out.grad, sum out.grad on each dimension 
+            # that it is larger to make up the difference.
+            # how do I write that in code?
+            # let's look at just other.grad
+            #   start at the end of both tuples (out.grad.shape and other.grad.shape)
+            #   are they the same? are they different? is one of them 1?
+            #   if they're different, 
+            def undo_broadcast(weights):
+                # let's assume that out was broadcasted correctly, and we never have to check if the shapes
+                # are unbroadcastable.
+                # should fillvalue be 1 here?
+                shapearr = []
+                for dim, (outsize, weightsize) in enumerate(itt.zip_longest(reversed(out.grad.shape), reversed(weights.grad.shape), fillvalue=0)):
+                    if outsize > weightsize:
+                        shapearr.append(len(out.grad.shape) - dim - 1)
+                return shapearr
+
+            self.grad += out.grad if out.grad.size == self.grad.size else out.grad.sum(axis=tuple(undo_broadcast(self)))
+            other.grad += out.grad if out.grad.size == other.grad.size else out.grad.sum(axis=tuple(undo_broadcast(other)))
         out._backward = _backward
 
         return out
