@@ -136,7 +136,15 @@ class Tensor:
         return self
 
     def relu(self):
-        return self
+        # mask self.data with self.data > 0
+        mask = self.data > 0
+        rel = self.data * mask
+        out = Tensor(rel.tolist, self.data.dtype, (self,), 'relu')
+        def _backward():
+            self.grad += mask * out.grad
+            
+        out._backward = _backward
+        return out
 
     def backward(self):
         # topological sort

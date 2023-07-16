@@ -74,12 +74,13 @@ def comparemygrad(array1, array2):
     # print(f'mloss.grad: {mloss.grad}')
     # print(f'mloss.data: {mloss.data}')
 
-# compare addition
-# compadd([[1.0, 2.0], [3.0, 4.0]], [[1.0, 2.0], [3.0, 4.0]])
-compadd([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]], [1.0, 2.0])
-
-
 ### ALIGNED PARADIGMS: aka, we beasted
+# addition with broadcasting
+# compadd([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]], [1.0, 2.0])
+# 
+# addition without broadcasting
+# compadd([[1.0, 2.0], [3.0, 4.0]], [[1.0, 2.0], [3.0, 4.0]])
+#
 # square matmul
 # comparemygrad([[1.0, 2.0], [3.0, 4.0]], [[1.0, 2.0], [3.0, 4.0]])
 #
