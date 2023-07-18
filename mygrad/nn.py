@@ -19,9 +19,17 @@ class FullyConnectedLayer(Module):
         # He initialization, the goat
         self.W = Tensor(np.random.default_rng().normal(0, 2/(indim*outdim), size=indim*outdim).reshape(outdim, indim))
         self.b = Tensor(np.zeros(shape=(outdim)))
-        # there's got to be a better way to make the activation function then just "look it up"
+        # gonna have to make it a "look it up" activation function
         self.act = act
 
     def __call__(self, other):
         return ((self.W @ other) + self.b).relu()
+    
+    def zero_grad(self):
+        self.W.grad[:] = 0
+        self.b.grad[:] = 0
+
+class MLP(Module):
+    def __init__(self, indim, outdims):
+        self.layers = []
         
