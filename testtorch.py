@@ -2,6 +2,32 @@ import torch
 from mygrad.engine import Tensor
 import numpy as np
 
+def compmul(arr1, arr2):
+    w = torch.tensor(arr1, requires_grad=True)
+    x = torch.tensor(arr2, requires_grad=True)
+    b = w*x # did we broadcast? did we drop it in dirt? no, grow up
+    b.retain_grad()
+
+    loss = b.sum() 
+    loss.backward()
+    print(f'w: {w.data}')
+    print(f'w.grad: {w.grad}')
+    print(f'x.grad: {x.grad}')
+    print(f'b: {b.data}')
+
+    # now, do we align?
+    mw = Tensor(arr1)
+    mx = Tensor(arr2)
+    mb = mw*mx
+    print(f'mb: {mb}')
+    # print(f'mx: {mx}')
+    # print(f'mw: {mw}')
+
+    mloss = mb.sum()
+    mloss.backward()
+    print(f'mw: {mw}')
+    print(f'mx: {mx}')
+
 # we want to verify that the addition backward pass can work even 
 # when the result relies on broadcasting.
 # how do we test that? We need out.grad to not be a scalar, and to 
@@ -73,6 +99,9 @@ def comparemygrad(array1, array2):
     # print(f'mb.grad: {mb.grad}')
     # print(f'mloss.grad: {mloss.grad}')
     # print(f'mloss.data: {mloss.data}')
+
+
+compmul([[1.0, 2], [3, 4]], [1.0, 2])
 
 ### ALIGNED PARADIGMS: aka, we beasted
 # addition with broadcasting

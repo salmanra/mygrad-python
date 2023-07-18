@@ -20,6 +20,28 @@ class Tensor:
         self._op = _op
         self._backward = lambda: None
 
+    # if self.grad is smaller than out.grad, sum out.grad on each dimension 
+    # that it is larger to make up the difference.
+    # how do I write that in code?
+    # let's look at just other.grad
+    #   start at the end of both tuples (out.grad.shape and other.grad.shape)
+    #   are they the same? are they different? is one of them 1?
+    #   if they're different, 
+    @staticmethod
+    def undo_broadcast(out, weights):
+        '''
+        out: ndarray that's just too big
+        weights: ndarray that's just too small
+        '''
+        # let's assume that out was broadcasted correctly, and we never have to check if the shapes
+        # are unbroadcastable.
+        # should fillvalue be 1 here?
+        shapearr = []
+        for dim, (outsize, weightsize) in enumerate(itt.zip_longest(reversed(out.shape), reversed(weights.shape), fillvalue=0)):
+            if outsize > weightsize:
+                shapearr.append(len(out.shape) - dim - 1)
+        return shapearr
+    
     def __add__(self, other):
         # let's say out is constructed via broadcasting. 
         # let's say self is the smaller of the two.
@@ -29,25 +51,8 @@ class Tensor:
         # is this why requires_grad=False exists? Not just performance, but literally being unable to backprop?
         out = Tensor(self.data + other.data, float, (self, other), "+")
         def _backward():
-            # if self.grad is smaller than out.grad, sum out.grad on each dimension 
-            # that it is larger to make up the difference.
-            # how do I write that in code?
-            # let's look at just other.grad
-            #   start at the end of both tuples (out.grad.shape and other.grad.shape)
-            #   are they the same? are they different? is one of them 1?
-            #   if they're different, 
-            def undo_broadcast(weights):
-                # let's assume that out was broadcasted correctly, and we never have to check if the shapes
-                # are unbroadcastable.
-                # should fillvalue be 1 here?
-                shapearr = []
-                for dim, (outsize, weightsize) in enumerate(itt.zip_longest(reversed(out.grad.shape), reversed(weights.grad.shape), fillvalue=0)):
-                    if outsize > weightsize:
-                        shapearr.append(len(out.grad.shape) - dim - 1)
-                return shapearr
-
-            self.grad += out.grad if out.grad.size == self.grad.size else out.grad.sum(axis=tuple(undo_broadcast(self)))
-            other.grad += out.grad if out.grad.size == other.grad.size else out.grad.sum(axis=tuple(undo_broadcast(other)))
+            self.grad += out.grad if out.grad.size == self.grad.size else out.grad.sum(axis=tuple(Tensor.undo_broadcast(out.grad, self.grad)))
+            other.grad += out.grad if out.grad.size == other.grad.size else out.grad.sum(axis=tuple(Tensor.undo_broadcast(out.grad, other.grad)))
         out._backward = _backward
 
         return out
@@ -61,8 +66,10 @@ class Tensor:
             # TODO: verify this backward pass.
             # it is definitely wrong, as mat-vec elt-wise mul backward pass does not work
             #   something about broadcasting!
-            self.grad += other.data * out.grad
-            other.grad += self.data * out.grad 
+            prod1 = other.data * out.grad
+            prod2 = self.data * out.grad
+            self.grad += prod1 if prod1.size == self.grad.size else prod1.sum(axis=tuple(Tensor.undo_broadcast(prod1, self.grad)))
+            other.grad += prod2 if prod2.size == other.grad.size else prod2.sum(axis=tuple(Tensor.undo_broadcast(prod2, other.grad)))
         out._backward = _backward
 
         return out
@@ -139,7 +146,7 @@ class Tensor:
         # mask self.data with self.data > 0
         mask = self.data > 0
         rel = self.data * mask
-        out = Tensor(rel.tolist, self.data.dtype, (self,), 'relu')
+        out = Tensor(rel.tolist(), self.data.dtype, (self,), 'relu')
         def _backward():
             self.grad += mask * out.grad
             

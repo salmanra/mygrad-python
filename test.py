@@ -20,3 +20,9 @@ x.backward()
 print(u)
 
 # how do we get all the way to MLP?
+# an FC layer
+#   a 2D weight tensor
+#   a 1D bias tensor
+#   an activation function
+# a loss function
+
