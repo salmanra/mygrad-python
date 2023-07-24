@@ -25,4 +25,3 @@ print(u)
 #   a 1D bias tensor
 #   an activation function
 # a loss function
-

@@ -2,10 +2,11 @@ import torch
 from mygrad.engine import Tensor
 import numpy as np
 
+
 def compmul(arr1, arr2):
     w = torch.tensor(arr1, requires_grad=True)
     x = torch.tensor(arr2, requires_grad=True)
-    b = w*x # did we broadcast? did we drop it in dirt? no, grow up
+    b = w*x  # did we broadcast? did we drop it in dirt? no, grow up
     b.retain_grad()
 
     loss = b.sum() 
@@ -32,14 +33,16 @@ def compmul(arr1, arr2):
 # when the result relies on broadcasting.
 # how do we test that? We need out.grad to not be a scalar, and to 
 # not be homogenous.
+
+
 def compadd(arr1, arr2):
     w = torch.tensor(arr1, requires_grad=True)
     x = torch.tensor(arr2, requires_grad=True)
-    b = w+x # did we broadcast? did we drop it in dirt? no, grow up
+    b = w+x  # did we broadcast? did we drop it in dirt? no, grow up
     b.retain_grad()
 
     c = torch.arange(b.numel()).reshape(b.shape)
-    d = b*c # I guess we're testing multiplcation too!
+    d = b*c  # I guess we're testing multiplcation too!
     loss = d.sum() 
     loss.backward()
     print(f'w: {w.data}')
@@ -64,6 +67,8 @@ def compadd(arr1, arr2):
     print(f'mx: {mx}')
 
 # this one's for __matmul__ and sum
+
+
 def comparemygrad(array1, array2):
     ''' 
     a comparison between pytorch's treatment of matmul between two matrices and mygrad
@@ -103,10 +108,9 @@ def comparemygrad(array1, array2):
 
 compmul([[1.0, 2], [3, 4]], [1.0, 2])
 
-### ALIGNED PARADIGMS: aka, we beasted
+# ALIGNED PARADIGMS: aka, we beasted
 # addition with broadcasting
-# compadd([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]], [1.0, 2.0])
-# 
+# compadd([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]], [1.0, 2.0]) 
 # addition without broadcasting
 # compadd([[1.0, 2.0], [3.0, 4.0]], [[1.0, 2.0], [3.0, 4.0]])
 #
