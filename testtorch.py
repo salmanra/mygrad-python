@@ -2,6 +2,9 @@ import torch
 from mygrad.engine import Tensor
 import numpy as np
 
+# emacs is a wonderous thing. magit is a wonderous thing.
+# autocomplete is a wonderous thing.
+
 
 def compmul(arr1, arr2):
     w = torch.tensor(arr1, requires_grad=True)
