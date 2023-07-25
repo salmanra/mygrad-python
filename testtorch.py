@@ -12,7 +12,7 @@ def compmul(arr1, arr2):
     b = w*x  # did we broadcast? did we drop it in dirt? no, grow up
     b.retain_grad()
 
-    loss = b.sum() 
+    loss = b.sum()
     loss.backward()
     print(f'w: {w.data}')
     print(f'w.grad: {w.grad}')
