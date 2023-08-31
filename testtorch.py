@@ -1,6 +1,7 @@
 import torch
 from mygrad.engine import Tensor
 import numpy as np
+import pdb
 
 # emacs is a wonderous thing. magit is a wonderous thing.
 # autocomplete is a wonderous thing.
@@ -32,9 +33,9 @@ def compmul(arr1, arr2):
     print(f'mw: {mw}')
     print(f'mx: {mx}')
 
-# we want to verify that the addition backward pass can work even 
+# we want to verify that the addition backward pass can work even
 # when the result relies on broadcasting.
-# how do we test that? We need out.grad to not be a scalar, and to 
+# how do we test that? We need out.grad to not be a scalar, and to
 # not be homogenous.
 
 
@@ -46,7 +47,7 @@ def compadd(arr1, arr2):
 
     c = torch.arange(b.numel()).reshape(b.shape)
     d = b*c  # I guess we're testing multiplcation too!
-    loss = d.sum() 
+    loss = d.sum()
     loss.backward()
     print(f'w: {w.data}')
     print(f'w.grad: {w.grad}')
@@ -73,14 +74,15 @@ def compadd(arr1, arr2):
 
 
 def comparemygrad(array1, array2):
-    ''' 
-    a comparison between pytorch's treatment of matmul between two matrices and mygrad
+    '''
+    a comparison between pytorch's treatment of matmul between two
+    matrices and mygrad
     '''
     w = torch.tensor(array1, requires_grad=True)
     x = torch.tensor(array2, requires_grad=True)
     b = w@x
     b.retain_grad()
-    loss = b.sum() 
+    loss = b.sum()
     loss.backward()
     print(f'w: {w.data}')
     print(f'w.grad: {w.grad}')

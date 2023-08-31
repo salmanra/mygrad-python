@@ -2,7 +2,7 @@
     My recreation of Andrej Karpathy's micrograd Value
 """
 from math import exp, log
-import math
+import pdb
 import numpy as np
 import itertools as itt
 
@@ -20,7 +20,29 @@ class Tensor:
         self._op = _op
         self._backward = lambda: None
 
-    # if self.grad is smaller than out.grad, sum out.grad on each dimension 
+    # need __iter__ and __next__ to make Tensors iterable, zippable
+    # TODO: implement for 1D tensors. 
+    # TODO: conceive how to extend to 2D, ND
+    def __iter__(self):
+        ''' 
+        returns a Tensor iterator?
+        what goes into the Tensor iterator type?
+        where do I put the iter type?
+        
+        iter needs a reference to self.data (self being the Tensor)
+        iter needs to be imported with Tensor. 
+        '''
+        self._index = 0
+        return self
+    
+    def __next__(self):
+        if self._index < len(self.data):
+            value = self.data[self._index]
+            self._index += 1
+            return value
+        else:
+            raise StopIteration
+    # if self.grad is smaller than out.grad, sum out.grad on each dimension
     # that it is larger to make up the difference.
     # how do I write that in code?
     # let's look at just other.grad
@@ -50,6 +72,7 @@ class Tensor:
         # is this why we build a backwards graph? to store self somewhere as its big, broadcasted, backpropable self?
         # is this why requires_grad=False exists? Not just performance, but literally being unable to backprop?
         out = Tensor(self.data + other.data, float, (self, other), "+")
+
         def _backward():
             self.grad += out.grad if out.grad.size == self.grad.size else out.grad.sum(axis=tuple(Tensor.undo_broadcast(out.grad, self.grad)))
             other.grad += out.grad if out.grad.size == other.grad.size else out.grad.sum(axis=tuple(Tensor.undo_broadcast(out.grad, other.grad)))
@@ -125,7 +148,7 @@ class Tensor:
         # what's happening here?
         # we take the exponent of each element of the Tensor,
         # then we must backprop through each element of the Tensor
-        out = Tensor([exp(elt) for elt in self.data])
+        out = Tensor([exp(elt) for elt in self.data], dtype=self.data.dtype, _children=(self,), _op='exp')
         def _backward():
             self.grad += out.data * out.grad
         out._backward = _backward
@@ -133,11 +156,24 @@ class Tensor:
         return out
 
     # TODO: implement these buggers
-    def log(self):
-        return self
+    def log(self):   
+        # TODO: extrapolate to 2D, ND     
+        out = Tensor([log(elt) for elt in self.data])
+        def _backward():
+            self.grad += out.grad / out.data
+        out._backward = _backward
+
+        return out
 
     def __pow__(self, other):
-        return self
+        # assume other is just some int
+        # TODO: extrapolate for self 2D, ND
+        out = Tensor(np.power(self.data, other), dtype=self.data.dtype, _children=(self,), _op='pow')
+        def _backward():
+            self.grad += other * np.power(self.data, other-1) * out.grad
+        out._backward = _backward
+
+        return out
 
     def tanh(self):
         return self
@@ -147,16 +183,16 @@ class Tensor:
         mask = self.data > 0
         rel = self.data * mask
         out = Tensor(rel.tolist(), self.data.dtype, (self,), 'relu')
+
         def _backward():
             self.grad += mask * out.grad
-            
+
         out._backward = _backward
         return out
 
     def backward(self):
         # topological sort
         # reverse topo, for each node: _backward
-
         topo = []
         visited = set()
         # it's just a post-order traversal my guy...
@@ -174,7 +210,7 @@ class Tensor:
             node._backward()
 
     def __neg__(self):
-        return self * -1
+        return self * Tensor(-1)
 
     def __sub__(self, other):
         return self + (-other)
