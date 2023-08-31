@@ -6,7 +6,7 @@ def MSELoss(ys, os):
     return sum((y - out) ** 2 for (y, out) in zip(ys, os))
 
 
-def train(net, lossfunc, lrate, indata, truth, epochs, batchsize):
+def train(net, lossfunc, lrate, indata, truth, epochs):
     # batch size is here so we do SGD and not merely GD
 
     for _ in range(epochs):
