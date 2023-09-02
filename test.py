@@ -48,8 +48,6 @@ def train(net, lossfunc, lrate, indata, truth, epochs):
         for p in net.parameters():
             p.data -= lrate * p.grad
         
-        print(f"loss: {loss}")
-
 
 
 def eval(net, lossfunc, indata, truth):
@@ -64,7 +62,7 @@ lr = 0.1
 
 ys = Tensor([1.0, -1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0])
 
-train(mlp, MSELoss, lr, xs, ys, 10)
+train(mlp, MSELoss, lr, xs, ys, 100)
 loss = eval(mlp, MSELoss, xs, ys)
 
 print(f"loss: {loss}, final outs: {mlp(xs)}")

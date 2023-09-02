@@ -26,7 +26,7 @@ class FullyConnectedLayer(Module):
 
     def __call__(self, other):
         # assume other is a Tensor
-        return ((self.W @ other) + self.b).relu()
+        return ((self.W @ other) + self.b).relu() if self.act else self.W @ other + self.b
 
     def parameters(self):
         # an array of two Tensors... is this what life is?
@@ -42,7 +42,7 @@ class FullyConnectedLayer(Module):
 class MLP(Module):
     def __init__(self, indim, outdims):
         all_layers = [indim] + outdims
-        self.layers = [FullyConnectedLayer(all_layers[i], all_layers[i+1]) for i in range(len(all_layers) - 1)]
+        self.layers = [FullyConnectedLayer(all_layers[i], all_layers[i+1], i != len(outdims) - 1) for i in range(len(outdims))]
 
     def __call__(self, other):
         result = other
