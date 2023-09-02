@@ -87,7 +87,6 @@ class Value:
     def relu(self):
         t = self.data if self.data > 0 else 0.0
         out = Value(t, (self,), "ReLU")
-
         def _backward():
             self.grad += (out.data > 0) * out.grad
 

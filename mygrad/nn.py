@@ -61,6 +61,7 @@ class MLP(Module):
         # nin - int: input dimenstion
         # nouts List(int): hidden+output dimenstions
         sz = [nin] + nouts
+        # !!! it's relu for every layer except the last!!! obviously!!!
         self.layers = [
             (Layer(sz[i], sz[i + 1], i != (len(nouts) - 1))) for i in range(len(nouts))
         ]
