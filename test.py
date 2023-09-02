@@ -25,7 +25,7 @@ def eval(net, lossfunc, indata, truth):
 
 
 nin = 10
-nouts = [1, nin]
+nouts = [6, nin]
 xs = [uniform(-1, 1) for _ in range(nin)]
 mlp = MLP(nin, nouts)
 lr = 0.1

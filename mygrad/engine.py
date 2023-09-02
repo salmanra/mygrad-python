@@ -63,9 +63,10 @@ class Value:
         other = other if isinstance(other, Value) else Value(other)
         t = self.data**other.data
         out = Value(t, (self, other), "pow")
-
         def _backward():
             self.grad += other.data * (self.data ** (other.data - 1)) * out.grad
+            if math.fabs(self.data) < 0.0001:
+                return
             other.grad += (
                 math.copysign(log(math.fabs(self.data)), self.data) * t * out.grad
             )
