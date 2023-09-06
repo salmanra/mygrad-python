@@ -1,10 +1,8 @@
+from typing import Any
 import numpy as np
 
 from mygrad.engine import Tensor
 import pdb
-
-# want to build up to a MLP using Tensors as defined in engine.py
-
 
 class Module:
     def zero_grad(self):
@@ -14,10 +12,9 @@ class Module:
     def parameters(self):
         return []
 
-
 class FullyConnectedLayer(Module):
     # needs an in-dim, an out-dim, and an act function
-    def __init__(self, indim, outdim, act='relu') -> None:
+    def __init__(self, indim, outdim, act=True) -> None:
         # He initialization, the goat
         self.W = Tensor(np.random.default_rng().normal(0, 2/(indim*outdim), size=indim*outdim).reshape(outdim, indim))
         self.b = Tensor(np.zeros(shape=(outdim)))
@@ -30,14 +27,10 @@ class FullyConnectedLayer(Module):
 
     def parameters(self):
         # an array of two Tensors... is this what life is?
-        # TODO: verify that this can work. mostly just wait until 
-        # this causes a bug... nominative determinism
+        # yes. the whole point of having this is to let an optimizer 
+        # use the .grad and .data attributes of each param.
+        # this is perfect.
         return [self.W, self.b]
-
-    def zero_grad(self):
-        self.W.grad = np.zeros_like(self.W.grad)
-        self.b.grad = np.zeros_like(self.b.grad)
-
 
 class MLP(Module):
     def __init__(self, indim, outdims):
@@ -54,6 +47,31 @@ class MLP(Module):
         # an array of tensors...
         return [tensor for layer in self.layers for tensor in layer.parameters()]
     
-    def zero_grad(self):
-        for layer in self.layers:
-            layer.zero_grad()
+class SelfAttention(Module):
+    # selfattention... 
+    # the params are just the transformations from input to q, k, v
+    # so everything funky just goes to the forward pass
+    def __init__(self, k, heads) -> None:
+        self.k = k # input dim
+        self.make_query = Tensor([np.random.default_rng().normal(0, 2/(k**2), size=k**2).reshape(k, k)])
+        self.make_key = Tensor([np.random.default_rng().normal(0, 2/(k**2), size=k**2).reshape(k, k)])
+        self.make_value = Tensor([np.random.default_rng().normal(0, 2/(k**2), size=k**2).reshape(k, k)])
+
+    
+    def __call__(self, other: Tensor) -> Any:
+        # forward pass
+
+        # do I need tensor transpose here?
+        queries = (other @ self.make_query) / (self.k ** 0.5) 
+        keys = other @ self.make_key 
+        values = other @ self.make_value
+
+        # definitely need tensor transpose here
+        Wp =  queries @ keys.T()
+        Wf = Wp.softmax()
+
+        outs = Wf @ values
+        return outs
+    
+    def parameters(self):
+        return [self.make_query, self.make_key, self.make_value]

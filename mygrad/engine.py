@@ -84,6 +84,7 @@ class Tensor:
         '''
         multiply arguments element-wise
         '''
+        other = other if isinstance(other, Tensor) else Tensor(other)
         out = Tensor(self.data.__mul__(other.data), float, (self, other), "*")
         def _backward():
             # TODO: verify this backward pass.
@@ -148,7 +149,10 @@ class Tensor:
         # what's happening here?
         # we take the exponent of each element of the Tensor,
         # then we must backprop through each element of the Tensor
-        out = Tensor([exp(elt) for elt in self.data], dtype=self.data.dtype, _children=(self,), _op='exp')
+        # brotherman... why aren't you just using numpy exp???
+        # is there anyway this backward pass is correct???
+
+        out = Tensor(np.exp(self.data), dtype=self.data.dtype, _children=(self,), _op='exp')
         def _backward():
             self.grad += out.data * out.grad
         out._backward = _backward
@@ -164,7 +168,17 @@ class Tensor:
         out._backward = _backward
 
         return out
+    
+    def T(self):
+        # absolutely no clue if this looks correct
+        data = self.data.T
+        out = Tensor(data, float, (self,), 'T')
+        def _backward():
+            self.grad += out.grad.T
 
+        out._backward = _backward
+        return out
+    
     def __pow__(self, other):
         # assume other is just some int
         # TODO: extrapolate for self 2D, ND
@@ -177,6 +191,12 @@ class Tensor:
 
     def tanh(self):
         return self
+
+    def softmax(self, dim=-1):
+        # now this... this is inefficient
+        # and maybe even incorrect.
+        # correctness rides on .sum()
+        return self.exp()/self.exp().sum(axis=dim)
 
     def relu(self):
         # mask self.data with self.data > 0
